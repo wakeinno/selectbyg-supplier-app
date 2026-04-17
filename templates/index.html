@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Select by G. — Supplier Presentation Generator</title>
+  <style>
+    :root {
+      --black:      #000000;
+      --dark:       #111111;
+      --mid:        #444444;
+      --gray:       #888888;
+      --gray-light: #D8D8D8;
+      --off-white:  #F6F6F4;
+      --white:      #FFFFFF;
+      --success:    #2a7a2a;
+      --error:      #c0392b;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Georgia', serif; background: var(--off-white); color: var(--dark); min-height: 100vh; display: flex; flex-direction: column; }
+    header { background: var(--black); position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 12px rgba(0,0,0,0.4); }
+    .header-inner { max-width: 1100px; margin: 0 auto; padding: 14px 32px; display: flex; align-items: center; gap: 16px; }
+    .header-logo { display: flex; align-items: center; text-decoration: none; }
+    .header-logo img { height: 48px; width: auto; display: block; }
+    .header-subtitle { margin-left: auto; font-family: 'Arial', sans-serif; font-size: 0.7rem; letter-spacing: 0.12em; color: rgba(255,255,255,0.45); text-transform: uppercase; }
+    .progress-nav { background: white; border-bottom: 2px solid var(--black); }
+    .progress-inner { max-width: 1100px; margin: 0 auto; padding: 0 32px; display: flex; gap: 0; }
+    .step-tab { padding: 13px 18px; color: var(--gray); font-size: 0.75rem; font-family: 'Arial', sans-serif; letter-spacing: 0.06em; cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.18s; display: flex; align-items: center; gap: 8px; white-space: nowrap; text-transform: uppercase; }
+    .step-tab:hover { color: var(--dark); }
+    .step-tab.active { color: var(--black); border-bottom-color: var(--black); font-weight: bold; }
+    .step-tab.done { color: var(--success); }
+    .step-num { width: 20px; height: 20px; border-radius: 50%; background: var(--gray-light); display: flex; align-items: center; justify-content: center; font-size: 0.65rem; font-style: normal; }
+    .step-tab.active .step-num { background: var(--black); color: white; }
+    .step-tab.done .step-num  { background: var(--success); color: white; }
+    .main { max-width: 1100px; margin: 0 auto; padding: 36px 32px 80px; flex: 1; }
+    .section-card { background: white; border-radius: 8px; padding: 36px 40px; margin-bottom: 24px; box-shadow: 0 1px 6px rgba(0,0,0,0.07); border: 1px solid var(--gray-light); display: none; }
+    .section-card.active { display: block; }
+    .section-header { display: flex; align-items: flex-start; gap: 16px; margin-bottom: 28px; padding-bottom: 18px; border-bottom: 1px solid var(--gray-light); }
+    .section-icon { width: 38px; height: 38px; background: var(--black); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 16px; flex-shrink: 0; }
+    .section-header h2 { font-size: 1.2rem; color: var(--black); font-weight: normal; letter-spacing: 0.02em; }
+    .section-header p { color: var(--gray); font-size: 0.82rem; margin-top: 4px; font-family: 'Arial', sans-serif; }
+    .field-group { margin-bottom: 20px; }
+    .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+    label { display: block; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--mid); font-family: 'Arial', sans-serif; font-weight: 700; margin-bottom: 7px; }
+    label .required { color: var(--black); }
+    label .optional { color: var(--gray); font-weight: normal; text-transform: none; letter-spacing: 0; font-size: 0.76rem; }
+    input[type=text], input[type=url], input[type=email], textarea, select { width: 100%; padding: 10px 13px; border: 1.5px solid var(--gray-light); border-radius: 6px; font-size: 0.93rem; font-family: 'Georgia', serif; color: var(--dark); background: white; transition: border-color 0.18s, box-shadow 0.18s; outline: none; }
+    input:focus, textarea:focus, select:focus { border-color: var(--black); box-shadow: 0 0 0 3px rgba(0,0,0,0.07); }
+    textarea { resize: vertical; line-height: 1.6; }
+    .field-hint { font-family: 'Arial', sans-serif; font-size: 0.72rem; color: var(--gray); margin-top: 5px; }
+    .line-counter { font-family: 'Arial', sans-serif; font-size: 0.7rem; color: var(--gray); text-align: right; margin-top: 3px; }
+    .line-counter.over { color: var(--error); font-weight: bold; }
+    .concise-note { display: inline-flex; align-items: center; gap: 5px; background: var(--off-white); border: 1px solid var(--gray-light); border-radius: 4px; padding: 4px 10px; font-family: 'Arial', sans-serif; font-size: 0.7rem; color: var(--mid); margin-bottom: 10px; }
+    .concise-note::before { content: '\270F\FE0F'; font-size: 0.65rem; }
+    .dynamic-list { display: flex; flex-direction: column; gap: 9px; }
+    .list-item { display: flex; gap: 8px; align-items: center; }
+    .list-item input { flex: 1; }
+    .btn-remove { width: 32px; height: 32px; border: 1.5px solid var(--gray-light); border-radius: 5px; background: white; color: var(--gray); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0; transition: all 0.18s; }
+    .btn-remove:hover { border-color: var(--error); color: var(--error); background: #fef5f5; }
+    .btn-add { display: inline-flex; align-items: center; gap: 8px; padding: 8px 15px; border: 1.5px dashed var(--gray); border-radius: 6px; background: transparent; color: var(--mid); cursor: pointer; font-size: 0.82rem; font-family: 'Arial', sans-serif; transition: all 0.18s; margin-top: 8px; }
+    .btn-add:hover { border-color: var(--black); color: var(--black); }
+    .btn-add:disabled { opacity: 0.35; cursor: not-allowed; }
+    .star-selector { display: flex; gap: 2px; flex-shrink: 0; cursor: pointer; }
+    .star-selector .star { font-size: 18px; color: var(--gray-light); transition: color 0.12s; user-select: none; line-height: 1; }
+    .star-selector .star.active { color: var(--black); }
+    .photo-group { border: 1px solid var(--gray-light); border-radius: 8px; padding: 18px 22px; margin-bottom: 14px; position: relative; background: var(--off-white); }
+    .photo-group.supplier-group { border-color: var(--black); background: white; }
+    .photo-group-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+    .group-num { width: 26px; height: 26px; border-radius: 50%; background: var(--dark); color: white; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-family: 'Arial', sans-serif; font-weight: bold; flex-shrink: 0; }
+    .group-num.supplier-num { background: var(--black); }
+    .photo-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .photo-grid-1 { display: grid; grid-template-columns: 1fr; }
+    .photo-slot { aspect-ratio: 4/3; border: 2px dashed var(--gray-light); border-radius: 7px; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; position: relative; overflow: hidden; transition: all 0.18s; background: white; }
+    .photo-slot:hover { border-color: var(--black); background: var(--off-white); }
+    .photo-slot input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+    .photo-slot-icon { font-size: 22px; color: var(--gray); pointer-events: none; }
+    .photo-slot-label { font-size: 0.68rem; color: var(--gray); font-family: 'Arial', sans-serif; margin-top: 4px; pointer-events: none; }
+    .photo-slot.has-image { border-style: solid; border-color: var(--black); }
+    .photo-slot.has-image img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    .photo-slot.has-image .photo-slot-icon, .photo-slot.has-image .photo-slot-label { display: none; }
+    .logo-upload-zone { border: 2px dashed var(--gray-light); border-radius: 7px; padding: 18px 24px; cursor: pointer; background: white; transition: all 0.18s; display: flex; align-items: center; justify-content: center; min-height: 90px; }
+    .logo-upload-zone:hover { border-color: var(--black); background: var(--off-white); }
+    .logo-upload-zone.has-logo { border-style: solid; border-color: var(--black); }
+    .btn-remove-group { position: absolute; top: 10px; right: 10px; width: 26px; height: 26px; border: 1px solid var(--gray-light); border-radius: 5px; background: white; color: var(--gray); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 13px; transition: all 0.18s; }
+    .btn-remove-group:hover { border-color: var(--error); color: var(--error); }
+    .photo-section-title { font-family: 'Arial', sans-serif; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--mid); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+    .photo-section-title::after { content: ''; flex: 1; border-top: 1px solid var(--gray-light); }
+    .form-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 30px; }
+    .btn { padding: 11px 26px; border-radius: 6px; font-size: 0.87rem; cursor: pointer; border: none; transition: all 0.18s; font-family: 'Arial', sans-serif; letter-spacing: 0.04em; display: inline-flex; align-items: center; gap: 8px; }
+    .btn-primary { background: var(--black); color: white; }
+    .btn-primary:hover { background: #333; }
+    .btn-secondary { background: white; color: var(--dark); border: 1.5px solid var(--gray-light); }
+    .btn-secondary:hover { border-color: var(--black); color: var(--black); }
+    .btn-generate { background: var(--black); color: white; font-weight: bold; padding: 14px 38px; font-size: 0.93rem; letter-spacing: 0.08em; text-transform: uppercase; }
+    .btn-generate:hover { background: #333; transform: translateY(-1px); box-shadow: 0 4px 16px rgba(0,0,0,0.25); }
+    .btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none !important; }
+    .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .summary-item { background: var(--off-white); border-radius: 7px; padding: 15px 18px; border: 1px solid var(--gray-light); }
+    .summary-item h4 { font-size: 0.68rem; text-transform: uppercase; letter-spacing: 0.1em; color: var(--mid); font-family: 'Arial', sans-serif; font-weight: 700; margin-bottom: 7px; }
+    .summary-item p { font-size: 0.88rem; color: var(--dark); line-height: 1.5; }
+    .summary-item ul { list-style: none; font-size: 0.85rem; line-height: 1.7; }
+    .summary-item ul li::before { content: '\2014 '; color: var(--mid); }
+    .output-path-box { margin-top: 22px; padding: 16px 20px; background: var(--off-white); border: 1.5px solid var(--black); border-radius: 7px; display: flex; align-items: center; gap: 12px; font-family: 'Arial', sans-serif; font-size: 0.84rem; color: var(--mid); }
+    .output-path-box strong { color: var(--black); }
+    .toast { position: fixed; bottom: 28px; right: 28px; padding: 14px 22px; border-radius: 8px; font-family: 'Arial', sans-serif; font-size: 0.88rem; display: none; align-items: center; gap: 12px; box-shadow: 0 8px 28px rgba(0,0,0,0.22); z-index: 1000; max-width: 400px; }
+    .toast.success { background: var(--black); color: white; border-left: 4px solid #4caf50; display: flex; }
+    .toast.error   { background: white; color: var(--dark); border-left: 4px solid var(--error); display: flex; border: 1px solid var(--gray-light); }
+    .spinner { display: none; width: 18px; height: 18px; border: 2px solid rgba(255,255,255,0.3); border-top-color: white; border-radius: 50%; animation: spin 0.7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .site-footer { background: var(--black); margin-top: auto; }
+    .footer-inner { max-width: 1100px; margin: 0 auto; padding: 14px 32px; display: flex; align-items: center; gap: 20px; }
+    .footer-logo img { height: 52px; width: auto; display: block; }
+    .footer-divider { width: 1px; height: 44px; background: rgba(255,255,255,0.3); flex-shrink: 0; }
+    .footer-contact { display: flex; flex-direction: column; gap: 3px; font-family: 'Arial', sans-serif; font-size: 0.7rem; color: rgba(255,255,255,0.75); line-height: 1.4; }
+    .footer-contact a { color: rgba(255,255,255,0.75); text-decoration: none; }
+    .footer-contact a:hover { color: white; }
+    hr.divider { border: none; border-top: 1px solid var(--gray-light); margin: 26px 0; }
+  </style>
+</head>
+<body>
+<header>
+  <div class="header-inner">
+    <div class="header-logo"><img src="/static/sbg_logo_white.png" alt="Select by G. Furniture" /></div>
+    <div class="header-subtitle">Supplier Presentation Generator</div>
+  </div>
+</header>
+<nav class="progress-nav">
+  <div class="progress-inner">
+    <div class="step-tab active" onclick="goToStep(1)" id="tab-1"><span class="step-num">1</span> Identity</div>
+    <div class="step-tab" onclick="goToStep(2)" id="tab-2"><span class="step-num">2</span> History</div>
+    <div class="step-tab" onclick="goToStep(3)" id="tab-3"><span class="step-num">3</span> Projects</div>
+    <div class="step-tab" onclick="goToStep(4)" id="tab-4"><span class="step-num">4</span> Values &amp; Refs</div>
+    <div class="step-tab" onclick="goToStep(5)" id="tab-5"><span class="step-num">5</span> Photos</div>
+    <div class="step-tab" onclick="goToStep(6)" id="tab-6"><span class="step-num">6</span> Generate</div>
+  </div>
+</nav>
+<main class="main">
+<form id="supplierForm" enctype="multipart/form-data">
+<input type="hidden" name="hotel_count" id="hotel_count" value="0" />
+
+<!-- STEP 1: IDENTITY -->
+<div class="section-card active" id="step-1">
+  <div class="section-header">
+    <div class="section-icon">🏢</div>
+    <div><h2>Supplier Identity</h2><p>Core information about your company — appears on the first slide</p></div>
+  </div>
+  <div class="field-row">
+    <div class="field-group">
+      <label>Company Name <span class="required">*</span></label>
+      <input type="text" name="company_name" id="company_name" placeholder="e.g. DUCAMPUS" required />
+    </div>
+    <div class="field-group">
+      <label>Category / Specialty <span class="required">*</span></label>
+      <input type="text" name="category" id="category" placeholder="e.g. FIXED &amp; LOOSE FURNITURE – CUSTOM" required />
+    </div>
+  </div>
+  <div class="field-group" style="margin-top:18px;">
+    <label>Supplier Logo <span class="optional">— replaces the logo on all slides</span></label>
+    <div class="logo-upload-zone" id="logo-upload-zone" onclick="document.getElementById('supplier_logo_input').click()">
+      <input type="file" name="supplier_logo" id="supplier_logo_input" accept="image/*" style="display:none" onchange="previewLogo(this)" />
+      <div id="logo-preview-wrap" style="display:none; text-align:center;">
+        <img id="logo-preview-img" src="" alt="Logo preview" style="max-height:80px; max-width:200px; object-fit:contain; border-radius:4px;" />
+        <div id="logo-preview-name" style="font-family:Arial,sans-serif;font-size:0.72rem;color:var(--gray);margin-top:6px;"></div>
+      </div>
+      <div id="logo-placeholder" style="text-align:center;">
+        <div style="font-size:1.8rem; margin-bottom:6px;">🖼️</div>
+        <div style="font-family:Arial,sans-serif;font-size:0.8rem;font-weight:600;color:var(--mid);">Click to upload your company logo</div>
+        <div style="font-family:Arial,sans-serif;font-size:0.72rem;color:var(--gray);margin-top:4px;">PNG, JPG — transparent background recommended</div>
+      </div>
+    </div>
+  </div>
+  <div class="field-group">
+    <label>Identity Description <span class="required">*</span> <span class="optional">— max 2 lines</span></label>
+    <div class="concise-note">Keep it short &amp; impactful — 2 lines max</div>
+    <textarea name="identity" id="identity" rows="2" placeholder="e.g. Combines technology and craftsmanship to provide a fully customised response to every luxury hotel project in Europe." oninput="enforceLines(this, 2); updateCounter(this, 'identity-counter', 2)"></textarea>
+    <div class="line-counter" id="identity-counter">0 / 2 lines</div>
+  </div>
+  <div class="form-nav">
+    <div></div>
+    <button type="button" class="btn btn-primary" onclick="goToStep(2)">Next: History →</button>
+  </div>
+</div>
+
+<!-- STEP 2: HISTORY -->
+<div class="section-card" id="step-2">
+  <div class="section-header">
+    <div class="section-icon">📜</div>
+    <div><h2>Company History</h2><p>Key facts and milestones that establish your expertise and credibility</p></div>
+  </div>
+  <div class="field-group">
+    <label>History <span class="optional">— key facts, one per line, max 3 lines</span></label>
+    <div class="concise-note">3 lines max — one strong fact per line</div>
+    <textarea name="history" id="history" rows="3" placeholder="75 years of history — family business&#10;1 factory in Portugal — 20,000 sqm — 100+ employees&#10;ISO 9001:2015 certified since 2008" oninput="enforceLines(this, 3); updateCounter(this, 'history-counter', 3)"></textarea>
+    <div class="line-counter" id="history-counter">0 / 3 lines</div>
+  </div>
+  <div class="form-nav">
+    <button type="button" class="btn btn-secondary" onclick="goToStep(1)">← Back</button>
+    <button type="button" class="btn btn-primary" onclick="goToStep(3)">Next: Projects →</button>
+  </div>
+</div>
+
+<!-- STEP 3: PROJECTS -->
+<div class="section-card" id="step-3">
+  <div class="section-header">
+    <div class="section-icon">🏗️</div>
+    <div><h2>Project Approach</h2><p>How you handle projects from design to delivery</p></div>
+  </div>
+  <div class="field-group">
+    <label>Projects Description <span class="optional">— max 2 lines</span></label>
+    <div class="concise-note">2 lines max — be concise and direct</div>
+    <textarea name="projects" id="projects" rows="2" placeholder="Full project management: budgeting, technical drawings, manufacturing and on-site installation.&#10;Dedicated project managers ensure seamless coordination from design to delivery." oninput="enforceLines(this, 2); updateCounter(this, 'projects-counter', 2)"></textarea>
+    <div class="line-counter" id="projects-counter">0 / 2 lines</div>
+  </div>
+  <div class="form-nav">
+    <button type="button" class="btn btn-secondary" onclick="goToStep(2)">← Back</button>
+    <button type="button" class="btn btn-primary" onclick="goToStep(4)">Next: Values &amp; References →</button>
+  </div>
+</div>
+
+<!-- STEP 4: VALUES & REFERENCES -->
+<div class="section-card" id="step-4">
+  <div class="section-header">
+    <div class="section-icon">⭐</div>
+    <div><h2>Added Values &amp; References</h2><p>Your key differentiators and portfolio of prestigious hotel clients</p></div>
+  </div>
+  <div class="field-group">
+    <label>Added Values <span class="optional">(up to 8 bullet points)</span></label>
+    <div class="concise-note">Keep each value to 5–8 words — punchy and clear</div>
+    <div class="dynamic-list" id="added-values-list">
+      <div class="list-item"><input type="text" name="added_value_1" placeholder="e.g. Custom products for luxury hospitality" /><button type="button" class="btn-remove" onclick="removeItem(this)">×</button></div>
+      <div class="list-item"><input type="text" name="added_value_2" placeholder="e.g. Adaptable to all budgets" /><button type="button" class="btn-remove" onclick="removeItem(this)">×</button></div>
+      <div class="list-item"><input type="text" name="added_value_3" placeholder="e.g. European manufacturing" /><button type="button" class="btn-remove" onclick="removeItem(this)">×</button></div>
+    </div>
+    <button type="button" class="btn-add" id="add-value-btn" onclick="addValueItem()">+ Add Value</button>
+  </div>
+  <hr class="divider">
+  <div class="field-group">
+    <label>Hotel References <span class="optional">(max 8 — hotel name, city, area)</span></label>
+    <div class="concise-note">Select star rating — hotels auto-populate in the Photos step</div>
+    <div class="dynamic-list" id="references-list">
+      <div class="list-item">
+        <div class="star-selector" data-ref="1"><span class="star active" data-val="1">★</span><span class="star active" data-val="2">★</span><span class="star active" data-val="3">★</span><span class="star active" data-val="4">★</span><span class="star active" data-val="5">★</span></div>
+        <input type="hidden" name="reference_stars_1" id="ref-stars-1" value="5" />
+        <input type="text" name="reference_1" placeholder="e.g. Norman Hotel, Paris — Rooms" />
+        <button type="button" class="btn-remove" onclick="removeItem(this)">×</button>
+      </div>
+      <div class="list-item">
+        <div class="star-selector" data-ref="2"><span class="star active" data-val="1">★</span><span class="star active" data-val="2">★</span><span class="star active" data-val="3">★</span><span class="star active" data-val="4">★</span><span class="star active" data-val="5">★</span></div>
+        <input type="hidden" name="reference_stars_2" id="ref-stars-2" value="5" />
+        <input type="text" name="reference_2" placeholder="e.g. Four Seasons Geneva — Suites" />
+        <button type="button" class="btn-remove" onclick="removeItem(this)">×</button>
+      </div>
+    </div>
+    <button type="button" class="btn-add" id="add-ref-btn" onclick="addReferenceItem()">+ Add Reference</button>
+    <div id="ref-limit-msg" class="field-hint" style="display:none;color:var(--error);">Maximum 8 references reached.</div>
+  </div>
+  <div class="form-nav">
+    <button type="button" class="btn btn-secondary" onclick="goToStep(3)">← Back</button>
+    <button type="button" class="btn btn-primary" onclick="goToStep(5); populateHotelPhotos()">Next: Hotel Photos →</button>
+  </div>
+</div>
+
+<!-- STEP 5: PHOTOS -->
+<div class="section-card" id="step-5">
+  <div class="section-header">
+    <div class="section-icon">📷</div>
+    <div><h2>Photos</h2><p>2 supplier photos for the main slide, then 1 photo per hotel reference</p></div>
+  </div>
+  <div class="photo-section-title">Supplier presentation photos</div>
+  <div class="photo-group supplier-group">
+    <div class="photo-group-header">
+      <div class="group-num supplier-num">S</div>
+      <div style="flex:1">
+        <div style="font-family:Arial,sans-serif;font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;">Company / Supplier</div>
+        <div style="font-family:Arial,sans-serif;font-size:0.72rem;color:var(--gray);margin-top:2px;">2 photos for the main supplier slide</div>
+      </div>
+    </div>
+    <div class="photo-grid-2">
+      <div class="photo-slot" id="slot-s-1"><input type="file" name="supplier_photo_1" accept="image/*" onchange="previewPhoto(this, 's', '1')" /><div class="photo-slot-icon">📷</div><div class="photo-slot-label">Photo 1</div></div>
+      <div class="photo-slot" id="slot-s-2"><input type="file" name="supplier_photo_2" accept="image/*" onchange="previewPhoto(this, 's', '2')" /><div class="photo-slot-icon">📷</div><div class="photo-slot-label">Photo 2</div></div>
+    </div>
+  </div>
+  <div class="photo-section-title" style="margin-top:22px;">Hotel reference photos</div>
+  <div id="hotel-photos-container">
+    <div id="no-hotels-msg" style="font-family:Arial,sans-serif;font-size:0.82rem;color:var(--gray);padding:16px;text-align:center;border:1px dashed var(--gray-light);border-radius:7px;">Add hotel references in Step 4 — they will appear here automatically.</div>
+  </div>
+  <div class="form-nav">
+    <button type="button" class="btn btn-secondary" onclick="goToStep(4)">← Back</button>
+    <button type="button" class="btn btn-primary" onclick="buildSummaryAndGoToStep6()">Next: Review &amp; Generate →</button>
+  </div>
+</div>
+
+<!-- STEP 6: GENERATE -->
+<div class="section-card" id="step-6">
+  <div class="section-header">
+    <div class="section-icon">🎯</div>
+    <div><h2>Review &amp; Generate</h2><p>Confirm your data — the PPTX will be saved directly to the Select by G. Google Drive folder</p></div>
+  </div>
+  <div class="summary-grid" id="summary-content"></div>
+  <div class="output-path-box">
+    <span style="font-size:18px;flex-shrink:0">📁</span>
+    <span>Will be saved as: <strong id="output-filename">Select by G Group Présentations / [CompanyName]_SelectByG.pptx</strong></span>
+  </div>
+  <div class="form-nav">
+    <button type="button" class="btn btn-secondary" onclick="goToStep(5)">← Back</button>
+    <button type="button" class="btn btn-generate" id="generateBtn" onclick="submitForm()">
+      <span class="spinner" id="spinner"></span>
+      <span id="generateBtnText">Generate Presentation</span>
+    </button>
+  </div>
+</div>
+</form>
+</main>
+
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-logo"><img src="/static/sbg_logo_white.png" alt="Select by G. Furniture" /></div>
+    <div class="footer-divider"></div>
+    <div class="footer-contact">
+      <a href="mailto:info@selectbyg.com">info@selectbyg.com</a>
+      <span>France +33 6 40 69 35 67</span>
+      <span>Singapore +65 8892 9170</span>
+      <a href="http://www.selectbyg.com/furniture" target="_blank">www.selectbyg.com/furniture</a>
+    </div>
+  </div>
+</footer>
+
+<div class="toast" id="toast">
+  <span class="toast-icon" id="toastIcon"></span>
+  <div><div id="toastTitle" style="font-weight:bold;margin-bottom:2px;"></div><div id="toastMsg" style="opacity:0.8;font-size:0.8rem;"></div></div>
+</div>
+
+<script>
+let currentStep = 1;
+let addedValuesCount = 3;
+let referencesCount = 2;
+const MAX_REFS = 8;
+
+function goToStep(step) {
+  document.getElementById(`step-${currentStep}`).classList.remove('active');
+  document.getElementById(`tab-${currentStep}`).classList.remove('active');
+  currentStep = step;
+  document.getElementById(`step-${currentStep}`).classList.add('active');
+  document.getElementById(`tab-${currentStep}`).classList.add('active');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+function buildSummaryAndGoToStep6() { buildSummary(); goToStep(6); }
+function enforceLines(textarea, max) {
+  const lines = textarea.value.split('\n');
+  if (lines.length > max) textarea.value = lines.slice(0, max).join('\n');
+}
+function updateCounter(textarea, counterId, max) {
+  const lines = textarea.value ? textarea.value.split('\n').length : 0;
+  const el = document.getElementById(counterId);
+  if (!el) return;
+  el.textContent = `${lines} / ${max} lines`;
+  el.className = 'line-counter' + (lines > max ? ' over' : '');
+}
+document.addEventListener('click', function(e) {
+  const star = e.target.closest('.star');
+  if (!star) return;
+  const selector = star.closest('.star-selector');
+  if (!selector) return;
+  const val = parseInt(star.getAttribute('data-val'));
+  const refId = selector.getAttribute('data-ref');
+  const hidden = document.getElementById(`ref-stars-${refId}`);
+  if (hidden) hidden.value = val;
+  selector.querySelectorAll('.star').forEach(s => {
+    s.classList.toggle('active', parseInt(s.getAttribute('data-val')) <= val);
+  });
+});
+function addValueItem() {
+  const list = document.getElementById('added-values-list');
+  if (list.querySelectorAll('.list-item').length >= 8) return;
+  addedValuesCount++;
+  const div = document.createElement('div');
+  div.className = 'list-item';
+  div.innerHTML = `<input type="text" name="added_value_${addedValuesCount}" placeholder="Added value — keep it concise" /><button type="button" class="btn-remove" onclick="removeItem(this)">×</button>`;
+  list.appendChild(div);
+}
+function addReferenceItem() {
+  const list = document.getElementById('references-list');
+  const count = list.querySelectorAll('.list-item').length;
+  if (count >= MAX_REFS) { document.getElementById('ref-limit-msg').style.display = 'block'; return; }
+  referencesCount++;
+  const div = document.createElement('div');
+  div.className = 'list-item';
+  div.innerHTML = `
+    <div class="star-selector" data-ref="${referencesCount}">
+      <span class="star active" data-val="1">★</span><span class="star active" data-val="2">★</span>
+      <span class="star active" data-val="3">★</span><span class="star active" data-val="4">★</span>
+      <span class="star active" data-val="5">★</span>
+    </div>
+    <input type="hidden" name="reference_stars_${referencesCount}" id="ref-stars-${referencesCount}" value="5" />
+    <input type="text" name="reference_${referencesCount}" placeholder="Hotel name, City — Area" />
+    <button type="button" class="btn-remove" onclick="removeItem(this)">×</button>`;
+  list.appendChild(div);
+  updateRefLimitUI();
+}
+function removeItem(btn) { btn.parentElement.remove(); updateRefLimitUI(); }
+function updateRefLimitUI() {
+  const list = document.getElementById('references-list');
+  if (!list) return;
+  const count = list.querySelectorAll('.list-item').length;
+  const msg = document.getElementById('ref-limit-msg');
+  if (msg) msg.style.display = count >= MAX_REFS ? 'block' : 'none';
+  const addBtn = document.getElementById('add-ref-btn');
+  if (addBtn) addBtn.disabled = count >= MAX_REFS;
+}
+function populateHotelPhotos() {
+  const container = document.getElementById('hotel-photos-container');
+  const noHotelsMsg = document.getElementById('no-hotels-msg');
+  const refItems = document.querySelectorAll('#references-list .list-item');
+  const hotels = [];
+  refItems.forEach(item => {
+    const textInput = item.querySelector('input[type=text]');
+    if (textInput && textInput.value.trim()) hotels.push(textInput.value.trim());
+  });
+  document.getElementById('hotel_count').value = hotels.length;
+  container.querySelectorAll('.hotel-photo-group').forEach(el => el.remove());
+  if (hotels.length === 0) { if (noHotelsMsg) noHotelsMsg.style.display = 'block'; return; }
+  if (noHotelsMsg) noHotelsMsg.style.display = 'none';
+  hotels.forEach((hotelName, idx) => {
+    const i = idx + 1;
+    const group = document.createElement('div');
+    group.className = 'photo-group hotel-photo-group';
+    group.setAttribute('data-hotel-index', i);
+    group.innerHTML = `
+      <div class="photo-group-header">
+        <div class="group-num">${i}</div>
+        <div style="flex:1">
+          <label style="margin:0;font-size:0.7rem;letter-spacing:0.08em;">Hotel / Project</label>
+          <input type="text" name="hotel_photo_name_${i}" value="${escapeHtml(hotelName)}" style="margin-top:5px;" placeholder="Hotel name" />
+        </div>
+      </div>
+      <div class="photo-grid-1">
+        <div class="photo-slot" id="slot-h-${i}">
+          <input type="file" name="hotel_photo_${i}" accept="image/*" onchange="previewPhoto(this, 'h', '${i}')" />
+          <div class="photo-slot-icon">📷</div>
+          <div class="photo-slot-label">1 photo for this hotel</div>
+        </div>
+      </div>`;
+    container.appendChild(group);
+  });
+}
+function escapeHtml(str) { return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function previewLogo(input) {
+  const zone = document.getElementById('logo-upload-zone');
+  const placeholder = document.getElementById('logo-placeholder');
+  const previewWrap = document.getElementById('logo-preview-wrap');
+  const previewImg  = document.getElementById('logo-preview-img');
+  const previewName = document.getElementById('logo-preview-name');
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      previewImg.src = e.target.result;
+      previewName.textContent = input.files[0].name;
+      placeholder.style.display = 'none';
+      previewWrap.style.display = 'block';
+      zone.classList.add('has-logo');
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+function previewPhoto(input, prefix, num) {
+  const slot = document.getElementById(`slot-${prefix}-${num}`);
+  if (!slot) return;
+  if (input.files && input.files[0]) {
+    const reader = new FileReader();
+    reader.onload = e => {
+      const existing = slot.querySelector('img');
+      if (existing) existing.remove();
+      const img = document.createElement('img');
+      img.src = e.target.result;
+      slot.appendChild(img);
+      slot.classList.add('has-image');
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+function buildSummary() {
+  const form = document.getElementById('supplierForm');
+  const data = new FormData(form);
+  const companyName = data.get('company_name') || '—';
+  const category    = data.get('category')     || '—';
+  const history     = data.get('history')      || '—';
+  const identity    = data.get('identity')     || '—';
+  const projects    = data.get('projects')     || '—';
+  const values = [];
+  for (let i = 1; i <= 20; i++) { const v = data.get(`added_value_${i}`); if (v && v.trim()) values.push(v.trim()); }
+  const refs = [];
+  for (let i = 1; i <= 20; i++) {
+    const r = data.get(`reference_${i}`);
+    const s = data.get(`reference_stars_${i}`) || '0';
+    if (r && r.trim()) refs.push(`${r.trim()}${parseInt(s) ? ' ' + '★'.repeat(parseInt(s)) : ''}`);
+  }
+  const hotelGroups = document.querySelectorAll('.hotel-photo-group');
+  const slug = companyName.replace(/[^a-zA-Z0-9]/g,'_').substring(0, 30);
+  document.getElementById('output-filename').innerHTML = `Select by G Group Présentations / <strong>${slug}_SelectByG.pptx</strong>`;
+  document.getElementById('summary-content').innerHTML = `
+    <div class="summary-item" style="grid-column:1/-1"><h4>Company</h4><p><strong>${companyName}</strong> — ${category}</p></div>
+    <div class="summary-item"><h4>Identity</h4><p style="white-space:pre-line;font-size:0.83rem;">${identity.substring(0,200)}</p></div>
+    <div class="summary-item"><h4>History</h4><p style="white-space:pre-line;font-size:0.83rem;">${history.substring(0,200)}</p></div>
+    <div class="summary-item"><h4>Projects</h4><p style="white-space:pre-line;font-size:0.83rem;">${projects.substring(0,200)}</p></div>
+    <div class="summary-item"><h4>Added Values (${values.length})</h4><ul>${values.map(v=>`<li>${v}</li>`).join('')}</ul></div>
+    <div class="summary-item" style="grid-column:1/-1"><h4>Hotel References (${refs.length})</h4><ul>${refs.map(r=>`<li>${r}</li>`).join('')}</ul></div>
+    <div class="summary-item" style="grid-column:1/-1"><h4>Photos</h4><p>2 supplier photos + ${hotelGroups.length} hotel photo${hotelGroups.length !== 1 ? 's' : ''}</p></div>`;
+}
+async function submitForm() {
+  const btn = document.getElementById('generateBtn');
+  const spinner = document.getElementById('spinner');
+  const btnText = document.getElementById('generateBtnText');
+  btn.disabled = true; spinner.style.display = 'block'; btnText.textContent = 'Generating…';
+  try {
+    const formData = new FormData(document.getElementById('supplierForm'));
+    let response;
+    try { response = await fetch('/generate', { method: 'POST', body: formData }); }
+    catch (networkErr) {
+      showToast('error', '\u274c Cannot reach server', 'Make sure the app is running: double-click Launch App.bat');
+      btnText.textContent = 'Try Again'; return;
+    }
+    let result;
+    const ct = response.headers.get('content-type') || '';
+    if (ct.includes('application/json')) { result = await response.json(); }
+    else {
+      if (response.status === 413) result = { error: 'Files too large (max 50 MB total).' };
+      else result = { error: `Server error ${response.status}. Check the terminal.` };
+    }
+    if (result.success) {
+      showToast('success', '\u2705 Presentation Generated!', `${result.filename} saved to Select by G. Google Drive.`);
+      btnText.textContent = 'Generate Again';
+    } else {
+      showToast('error', '\u274c Generation Failed', result.error || 'An unexpected error occurred.');
+      btnText.textContent = 'Try Again';
+    }
+  } catch (err) {
+    showToast('error', '\u274c Error', err.message);
+    btnText.textContent = 'Try Again';
+  } finally {
+    btn.disabled = false; spinner.style.display = 'none';
+  }
+}
+function showToast(type, title, message) {
+  const toast = document.getElementById('toast');
+  toast.className = `toast ${type}`;
+  document.getElementById('toastTitle').textContent = title;
+  document.getElementById('toastMsg').textContent = message;
+  setTimeout(() => { toast.style.display = 'none'; toast.className = 'toast'; }, 6500);
+}
+</script>
+</body>
+</html>
